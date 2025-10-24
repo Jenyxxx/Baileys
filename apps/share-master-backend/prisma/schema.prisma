@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Merchant {
+  id             String           @id @default(cuid())
+  name           String
+  industry       String
+  region         String
+  sharedManagers SharedManager[]
+  vipCards       VipCard[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model SharedManager {
+  id                String      @id @default(cuid())
+  name              String
+  industry          String
+  region            String
+  status            String      @default("pending")
+  monthlyGmv        Int         @default(0)
+  directCustomers   Int         @default(0)
+  indirectCustomers Int         @default(0)
+  avatar            String?
+  rewardPlanId      String?
+  conciergeId       String?
+  merchantId        String?
+  rewardPlan        RewardPlan? @relation(fields: [rewardPlanId], references: [id])
+  concierge         Concierge?  @relation(fields: [conciergeId], references: [id])
+  merchant          Merchant?   @relation(fields: [merchantId], references: [id])
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+}
+
+model RewardPlan {
+  id                  String           @id @default(cuid())
+  name                String
+  topUpAmount         Int
+  managerQuota        Int
+  directRatio         Float
+  indirectRatio       Float
+  benefitDurationMonths Int
+  tags                String[]
+  sharedManagers      SharedManager[]
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+}
+
+model Concierge {
+  id             String           @id @default(cuid())
+  name           String
+  expertise      String
+  region         String
+  rating         Float            @default(0)
+  activeManagers Int              @default(0)
+  avatar         String?
+  sharedManagers SharedManager[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+}
+
+model VipCard {
+  id             String      @id @default(cuid())
+  code           String      @unique
+  merchantId     String
+  tier           String
+  issueCount     Int         @default(0)
+  redemptionRate Float       @default(0)
+  benefits       String[]
+  cover          String?
+  merchant       Merchant    @relation(fields: [merchantId], references: [id])
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model EventLog {
+  id        String   @id @default(cuid())
+  eventType String
+  payload   Json
+  createdAt DateTime @default(now())
+}
